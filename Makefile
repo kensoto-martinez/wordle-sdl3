@@ -8,6 +8,3 @@ all:
 
 clean:
 	rm -f $(EXE)
-
-launch:
-	$(EXE)
