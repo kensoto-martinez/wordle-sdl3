@@ -26,7 +26,7 @@
 
 <h1>How to install</h1>
 
-<p>If you want to play without having to build the project, click <a href="https://github.com/kensoto-martinez/wordle-sdl3/tags">here</a>, choose the latest version, and download either wordle.zip or wordle-windows.zip. Just launch the executable after extracting and you're all set. If you want to build or edit the project, download the source code.</p>
+<p>If you want to play without having to build the project, click <a href="https://github.com/kensoto-martinez/wordle-sdl3/tags">here</a>, choose the latest version, and download wordle-windows.zip. Just launch the executable after extracting and you're all set. If you want to build or edit the project, download the source code.</p>
 
 <br>
 
