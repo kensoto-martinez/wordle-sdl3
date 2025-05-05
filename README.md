@@ -14,10 +14,10 @@
 
 <br>
 
-<h1>Installation minimum requirements</h1>
+<h1>Installation requirements</h1>
 
 <ul>
-  <li>OS: Windows, Mac (untested), Linux (untested)</li>
+  <li>OS: Windows</li>
   <li>Specs: a computer</li>
   <li>Libraries: None (even when building; SDL3 included)</li>
 </ul>
