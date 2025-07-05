@@ -1,6 +1,10 @@
 # Wordle
 
-<p>This project is a Wordle clone, is coded in C, and uses the SDL3 library. Fun fact: This is my first coding project in C. It is also my biggest coding project ever.</p>
+<p>
+  <strong>Notice: I am not planning on updating this project any time soon. I will have to recode everything if I were to ever come back to this project.</strong>
+  <br>
+  This project is a Wordle clone, is coded in C, and uses the SDL3 library. Fun fact: This is my first coding project in C. It is also my biggest coding project ever (at the time of its creation).
+</p>
 
 <br>
 
