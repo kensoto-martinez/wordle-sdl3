@@ -1,5 +1,5 @@
 #include "config.h"
-#include "rendering.h"
+#include "game.h"
 
 int init_error(char *error_cause) {
     printf("Error: %s failed to initialize!\n", error_cause);
@@ -45,14 +45,10 @@ int main (int argc, char *argv[]) {
         SDL_RenderClear(Renderer);
 
         //render here
-        TTF_Font *font = TTF_OpenFont("assets/fonts/SG-ExtraLight.ttf", 24);
-        Render_Rect(100, 50, 0, 0, Center, (SDL_Color){255, 255, 255, 255}, true);
-        Render_Text("Hello world!", font, 0, 100, LowerCenter, (SDL_Color){255, 255, 255, 255});
-        Render_Image("assets/images/wordleicon.png", 100, 100, 100, 0, UpperCenter, (SDL_Color){255, 255, 255, 255});
+        Render_Game();
         //render here
 
         SDL_RenderPresent(Renderer);
-        TTF_CloseFont(font);
     }
 
     //exit window

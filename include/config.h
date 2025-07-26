@@ -19,6 +19,21 @@
 extern SDL_Window *Window;
 extern SDL_Renderer *Renderer;
 
+extern int Word_Length;
+extern int Max_Attempts;
+
+typedef struct {
+    SDL_Color White;
+    SDL_Color Black;
+    SDL_Color LightGray;
+    SDL_Color Gray;
+    SDL_Color DarkGray;
+    SDL_Color Green;
+    SDL_Color Yellow;
+    SDL_Color Red;
+} Colors;
+extern Colors Color;
+
 typedef enum {
     UpperLeft,
     UpperCenter,
@@ -31,5 +46,19 @@ typedef enum {
     LowerRight,
     Default
 } Alignment;
+
+typedef struct {
+    SDL_FRect parent;
+    SDL_FRect *children;
+    int child_count;
+    int capacity;
+} Container;
+
+// typedef struct {
+//     SDL_FRect rect;
+//     SDL_FRect text;
+//     SDL_Color color;
+//     bool is_focused;
+// } Wordle_Grid_Square;
 
 #endif

@@ -1,7 +1,9 @@
 #include "config.h"
-#include "rendering.h"
+#include "game.h"
 
-void set_aligned_position(Alignment alignment, int *x, int *y, int w, int h){
+#include "config.h"
+
+static void set_aligned_position(Alignment alignment, int *x, int *y, int w, int h){
     //get window size
     int window_width, window_height;
     SDL_GetWindowSize(Window, &window_width, &window_height);
@@ -104,4 +106,67 @@ SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignm
     SDL_DestroyTexture(texture);
 
     return destination_rect;
+}
+
+Container Create_Container(float x, float y, float w, float h) {
+    //sdl_frect is used as a container to hold children
+    Container container;
+    container.parent = (SDL_FRect){x, y, w, h};
+    container.children = NULL;
+    container.child_count = 0;
+    container.capacity = 0;
+    return container;
+}
+
+void Render_Container(Container *container, Alignment alignment) {
+    //render parent
+    SDL_FRect parent_rect = Render_Rect(container->parent.w, container->parent.h, container->parent.x, container->parent.y, alignment, Color.White, false);
+
+    //render children
+    for (int i = 0; i < container->child_count; i++) {
+        SDL_FRect child = container->children[i];
+        float absolute_x = container->parent.x + child.x * container->parent.w;
+        float absolute_y = container->parent.y + child.y * container->parent.h;
+        float absolute_w = child.w * container->parent.w;
+        float absolute_h = child.h * container->parent.h;
+
+        Render_Rect(absolute_w, absolute_h, absolute_x, absolute_y, Default, Color.LightGray, true);
+    }
+}
+
+void Add_Child_To_Container(Container *container, SDL_FRect child) {
+    //allocate or expand the children array
+    if (container->child_count == container->capacity) {
+        container->capacity = (container->capacity == 0) ? 4 : container->capacity * 2;
+        container->children = realloc(container->children, container->capacity * sizeof(SDL_FRect));
+    }
+    //add child
+    container->children[container->child_count++] = child;
+}
+
+void Destroy_Container(Container *container) {
+    //free container from memory
+    free(container->children);
+    container->children = NULL;
+    container->child_count = 0;
+    container->capacity = 0;
+}
+
+void Render_Game() {
+    Container grid_container = Create_Container(5, 25, MIN_WIDTH-10, MIN_HEIGHT-50);
+
+    for (int i=0; i<Word_Length; i++) {
+        for (int j=0; j<Max_Attempts; j++) {
+            SDL_FRect child = {
+                .x = i*.1f,
+                .y = j*.15f,
+                .w = .08f,
+                .h = .1f
+            };
+            Add_Child_To_Container(&grid_container, child);
+        }
+    }
+
+    Render_Container(&grid_container, Center);
+    Destroy_Container(&grid_container);
 }
