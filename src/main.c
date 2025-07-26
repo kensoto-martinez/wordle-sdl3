@@ -21,6 +21,7 @@ int main (int argc, char *argv[]) {
         return init_error("SDL window");
     }
     SDL_SetWindowPosition(Window, 0, 0); //window position set to top left corner
+    SDL_SetWindowMinimumSize(Window, MIN_WIDTH, MIN_HEIGHT); //window size limited
     Renderer = SDL_CreateRenderer(Window, NULL);
     if (!Renderer) {
         return init_error("SDL renderer");
@@ -44,10 +45,14 @@ int main (int argc, char *argv[]) {
         SDL_RenderClear(Renderer);
 
         //render here
+        TTF_Font *font = TTF_OpenFont("assets/fonts/SG-ExtraLight.ttf", 24);
         Render_Rect(100, 50, 0, 0, Center, (SDL_Color){255, 255, 255, 255}, true);
+        Render_Text("Hello world!", font, 0, 100, LowerCenter, (SDL_Color){255, 255, 255, 255});
+        Render_Image("assets/images/wordleicon.png", 100, 100, 100, 0, UpperCenter, (SDL_Color){255, 255, 255, 255});
         //render here
 
         SDL_RenderPresent(Renderer);
+        TTF_CloseFont(font);
     }
 
     //exit window
