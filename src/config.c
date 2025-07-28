@@ -15,5 +15,5 @@ Colors Color = {
 };
 
 //game configuring variables (changable in Settings)
-int Word_Length = 5;
-int Max_Attempts = 6;
+int Word_Length = 3;
+int Max_Attempts = 10;

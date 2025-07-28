@@ -1,7 +1,27 @@
 #include "config.h"
 #include "game.h"
 
-#include "config.h"
+static int init_error(char *error_cause) {
+    printf("Error: %s failed to initialize!\n", error_cause);
+    return 1;
+}
+
+int Game_Init() {
+    //initialize sdl and the other libraries (sdl_image is initialized with sdl_init())
+    if (!SDL_Init(SDL_INIT_VIDEO)) return init_error("SDL");
+    if (!TTF_Init()) return init_error("SDL_ttf");
+
+    //initialize window and renderer
+    Window = SDL_CreateWindow(TITLE, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_RESIZABLE);
+    if (!Window) return init_error("SDL window");
+    SDL_SetWindowPosition(Window, 0, 0); //window position set to top left corner
+    SDL_SetWindowMinimumSize(Window, MIN_WIDTH, MIN_HEIGHT); //window size limited
+
+    Renderer = SDL_CreateRenderer(Window, NULL);
+    if (!Renderer) return init_error("SDL renderer");
+
+    return 0;
+}
 
 static void set_aligned_position(Alignment alignment, int *x, int *y, int w, int h){
     //get window size
@@ -108,65 +128,55 @@ SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignm
     return destination_rect;
 }
 
-Container Create_Container(float x, float y, float w, float h) {
-    //sdl_frect is used as a container to hold children
-    Container container;
-    container.parent = (SDL_FRect){x, y, w, h};
-    container.children = NULL;
-    container.child_count = 0;
-    container.capacity = 0;
-    return container;
-}
+static Grid_Letter** Render_Grid() {
+    Grid_Letter **grid = malloc(Word_Length * Max_Attempts * sizeof(Grid_Letter));
+    if (!grid) return NULL;
 
-void Render_Container(Container *container, Alignment alignment) {
-    //render parent
-    SDL_FRect parent_rect = Render_Rect(container->parent.w, container->parent.h, container->parent.x, container->parent.y, alignment, Color.White, false);
+    //window size
+    int window_width, window_height;
+    SDL_GetWindowSize(Window, &window_width, &window_height);
 
-    //render children
-    for (int i = 0; i < container->child_count; i++) {
-        SDL_FRect child = container->children[i];
-        float absolute_x = container->parent.x + child.x * container->parent.w;
-        float absolute_y = container->parent.y + child.y * container->parent.h;
-        float absolute_w = child.w * container->parent.w;
-        float absolute_h = child.h * container->parent.h;
+    //measurements
+    const int WIDTH_MARGIN = 75;
+    const int HEIGHT_MARGIN_TOP = 75;
+    const int HEIGHT_MARGIN_BOTTOM = 200;
+    const int GRID_PADDING = 10;
+    const int FRAME_WIDTH = window_width - WIDTH_MARGIN * 2;
+    const int FRAME_HEIGHT = window_height - (HEIGHT_MARGIN_TOP + HEIGHT_MARGIN_BOTTOM);
+    const int FRAME_X = WIDTH_MARGIN;
+    const int FRAME_Y = HEIGHT_MARGIN_TOP;
 
-        Render_Rect(absolute_w, absolute_h, absolute_x, absolute_y, Default, Color.LightGray, true);
-    }
-}
-
-void Add_Child_To_Container(Container *container, SDL_FRect child) {
-    //allocate or expand the children array
-    if (container->child_count == container->capacity) {
-        container->capacity = (container->capacity == 0) ? 4 : container->capacity * 2;
-        container->children = realloc(container->children, container->capacity * sizeof(SDL_FRect));
-    }
-    //add child
-    container->children[container->child_count++] = child;
-}
-
-void Destroy_Container(Container *container) {
-    //free container from memory
-    free(container->children);
-    container->children = NULL;
-    container->child_count = 0;
-    container->capacity = 0;
-}
-
-void Render_Game() {
-    Container grid_container = Create_Container(5, 25, MIN_WIDTH-10, MIN_HEIGHT-50);
-
+    //set up frame and children
+    Render_Rect(FRAME_WIDTH, FRAME_HEIGHT, FRAME_X, FRAME_Y, Default, Color.White, true);
     for (int i=0; i<Word_Length; i++) {
         for (int j=0; j<Max_Attempts; j++) {
-            SDL_FRect child = {
-                .x = i*.1f,
-                .y = j*.15f,
-                .w = .08f,
-                .h = .1f
-            };
-            Add_Child_To_Container(&grid_container, child);
+            //make rectangle child
+            SDL_FRect child = Render_Rect(
+                FRAME_WIDTH/Word_Length-GRID_PADDING,
+                FRAME_HEIGHT/Max_Attempts-GRID_PADDING,
+                FRAME_X+i*(FRAME_WIDTH/Word_Length)+GRID_PADDING/2,
+                FRAME_Y+j*(FRAME_HEIGHT/Max_Attempts)+GRID_PADDING/2,
+                Default,
+                Color.DarkGray,
+                true
+            );
+            Grid_Letter grid_letter;
+            grid_letter.rect = child;
+            grid_letter.color = Color.DarkGray;
+            grid[j][i] = grid_letter;
         }
     }
 
-    Render_Container(&grid_container, Center);
-    Destroy_Container(&grid_container);
+    return grid;
+}
+
+void Render_Game() {
+    Grid_Letter **grid = Render_Grid();
+
+    if (!grid) {
+        printf("Error: Failed to allocate memory for grid.\n");
+    }
+    else {
+        printf("Success!");
+    }
 }

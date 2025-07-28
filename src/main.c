@@ -1,30 +1,11 @@
 #include "config.h"
 #include "game.h"
 
-int init_error(char *error_cause) {
-    printf("Error: %s failed to initialize!\n", error_cause);
-    return 1;
-}
-
 int main (int argc, char *argv[]) {
-    //initialize sdl and the other libraries (sdl_image is initialized with sdl_init())
-    if (!SDL_Init(SDL_INIT_VIDEO)){
-        return init_error("SDL");
-    }
-    if (!TTF_Init()) {
-        return init_error("SDL_ttf");
-    }
-
-    //initialize window and renderer
-    Window = SDL_CreateWindow(TITLE, WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE);
-    if (!Window) {
-        return init_error("SDL window");
-    }
-    SDL_SetWindowPosition(Window, 0, 0); //window position set to top left corner
-    SDL_SetWindowMinimumSize(Window, MIN_WIDTH, MIN_HEIGHT); //window size limited
-    Renderer = SDL_CreateRenderer(Window, NULL);
-    if (!Renderer) {
-        return init_error("SDL renderer");
+    //initialize game
+    int init = Game_Init();
+    if (init != 0) { //0 means success
+        return init;
     }
 
     bool running = true;
