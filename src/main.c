@@ -9,6 +9,7 @@ int main (int argc, char *argv[]) {
     }
 
     bool running = true;
+    SDL_Keycode key;
     SDL_Event event;
 
     //window loop
@@ -18,6 +19,9 @@ int main (int argc, char *argv[]) {
             switch (event.type) {
                 case SDL_EVENT_QUIT: //X window button pressed
                     running = false;
+                    break;
+                case SDL_EVENT_KEY_DOWN: //key pressed
+                    Register_Key_Press(event.key.key);
                     break;
             }
         }
@@ -30,7 +34,7 @@ int main (int argc, char *argv[]) {
         //render here
 
         SDL_RenderPresent(Renderer);
-        SDL_Delay(16);
+        SDL_Delay(1000/TPS);
     }
 
     //exit window

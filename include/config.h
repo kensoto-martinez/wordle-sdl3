@@ -11,16 +11,22 @@
 #define TITLE "Wordle"
 #define VERSION = "0.1-alpha"
 #define BACKGROUND_COLOR (SDL_Color){0, 0, 0, 255}
+#define TPS 120
 #define MIN_WIDTH 500
 #define MIN_HEIGHT 700
 #define DEFAULT_WIDTH 550
 #define DEFAULT_HEIGHT 700
 
+#define FOCUS_TILE_EXTRA_SIZE_PIXELS 8
+
+//window stuff
 extern SDL_Window *Window;
 extern SDL_Renderer *Renderer;
 
+//game configuring variables
 extern int Word_Length;
 extern int Max_Attempts;
+extern int Focus_Letter_Index[2];
 
 typedef struct {
     SDL_Color White;
@@ -51,7 +57,7 @@ typedef struct {
     SDL_FRect rect;
     SDL_Color color;
     char letter;
-    bool is_focused;
 } Grid_Letter;
+extern Grid_Letter **Grid;
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+//initialization
 static int init_error(char *error_cause);
 int Game_Init();
 
@@ -11,7 +12,8 @@ static SDL_FRect Render_Text(char *text, TTF_Font *font, int x, int y, Alignment
 static SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignment, SDL_Color color);
 
 //game rendering and logic
-static Grid_Letter** Render_Grid();
+static void Render_Grid();
 void Render_Game();
+void Register_Key_Press(SDL_Keycode key);
 
 #endif

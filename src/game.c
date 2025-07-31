@@ -144,13 +144,19 @@ static SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment
 }
 
 
-static Grid_Letter** Render_Grid() {
+static void Render_Grid() {
     //allocate memory for grid
-    Grid_Letter **grid = malloc(Max_Attempts * sizeof(Grid_Letter*));
-    if (!grid) return NULL;
+    Grid = malloc(Max_Attempts * sizeof(Grid_Letter*));
+    if (Grid == NULL) {
+        printf("Error allocating memory for grid\n");
+        return;
+    }
     for (int i=0; i<Max_Attempts; i++) {
-        grid[i] = malloc(Word_Length*sizeof(Grid_Letter));
-        if (!grid[i]) return NULL;
+        Grid[i] = malloc(Word_Length*sizeof(Grid_Letter));
+        if (Grid[i] == NULL) {
+            printf("Error allocating memory for grid\n");
+            return;
+        }
     }
 
     //window size
@@ -182,40 +188,70 @@ static Grid_Letter** Render_Grid() {
             int x = GRID_X + i * (tile_size + GRID_PADDING);
             int y = GRID_Y + j * (tile_size + GRID_PADDING);
 
-            //make grid square
-            SDL_FRect tile = Render_Rect(
-                tile_size,
-                tile_size,
-                x,
-                y,
-                Default,
-                Color.DarkGray,
-                true
-            );
+            //render focus tile if tile is focused
+            if (j == Focus_Letter_Index[0] && i == Focus_Letter_Index[1]) {
+                Render_Rect(tile_size+FOCUS_TILE_EXTRA_SIZE_PIXELS, tile_size+FOCUS_TILE_EXTRA_SIZE_PIXELS, x-FOCUS_TILE_EXTRA_SIZE_PIXELS/2, y-FOCUS_TILE_EXTRA_SIZE_PIXELS/2, Default, Color.White, true);
+            }
 
+            //render grid tile
             Grid_Letter grid_letter;
-            grid_letter.rect = tile;
+            grid_letter.rect = Render_Rect(tile_size, tile_size, x, y, Default, Color.DarkGray, true);
             grid_letter.color = Color.DarkGray;
             grid_letter.letter = ' ';
-            grid[j][i] = grid_letter;
+
+            //assign grid tile
+            Grid[j][i] = grid_letter;
         }
     }
-    
-    return grid;
 }
 
 void Render_Game() {
-    Grid_Letter **grid = Render_Grid();
-
-    if (grid == NULL) {
-        printf("Error: Failed to allocate memory for grid.\n");
-    }
+    //render grid
+    Render_Grid();
 
     //blah blah blah
 
     //free grid
     for (int i=0; i<Max_Attempts; i++) {
-        free(grid[i]);
+        free(Grid[i]);
     }
-    free(grid);
+    free(Grid);
+}
+
+void Register_Key_Press(SDL_Keycode key) {
+    Grid_Letter focused_tile = Grid[Focus_Letter_Index[0]][Focus_Letter_Index[1]];
+
+    switch(key) {
+        //handle key deletion
+        case SDLK_BACKSPACE:
+            focused_tile.letter = ' ';
+            if (Focus_Letter_Index[1] > 0) {
+                Focus_Letter_Index[1]--;
+            }
+
+            break;
+        //handle focus tile movement to the left
+        case SDLK_LEFT:
+            if (Focus_Letter_Index[1] > 0) {
+                Focus_Letter_Index[1]--;
+            }
+            break;
+        //handle focus tile movement to the right
+        case SDLK_RIGHT:
+            if (Focus_Letter_Index[1] < Word_Length - 1) {
+                Focus_Letter_Index[1]++;
+            }
+            break;
+        default:
+            //handle letter input
+            if (key >= 'a' && key <= 'z') {
+                focused_tile.letter = key;
+                
+                if (Focus_Letter_Index[1] < Word_Length - 1) {
+                    Focus_Letter_Index[1]++;
+                }
+            }
+
+            break;
+    }
 }
