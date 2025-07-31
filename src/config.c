@@ -14,6 +14,10 @@ Colors Color = {
     .Red = {255, 0, 0, 255}
 };
 
+
 //game configuring variables (changable in Settings)
-int Word_Length = 3;
-int Max_Attempts = 10;
+int Word_Length = 5;
+int Max_Attempts = 6;
+
+//set up initial grid
+Grid_Letter Grid[5][6] = {(Grid_Letter){}};

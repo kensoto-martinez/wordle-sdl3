@@ -30,6 +30,7 @@ int main (int argc, char *argv[]) {
         //render here
 
         SDL_RenderPresent(Renderer);
+        SDL_Delay(16);
     }
 
     //exit window

@@ -4,3 +4,5 @@ EXE=build/wordle
 all:
 	gcc $(SRC) -o $(EXE) -Iinclude -Llib -lSDL3 -lSDL3_ttf -lSDL3_image
 	$(EXE)
+del:
+	rm -f $(EXE)

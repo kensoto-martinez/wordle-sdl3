@@ -1,29 +1,44 @@
 #include "config.h"
 #include "game.h"
 
-static int init_error(char *error_cause) {
+static int Init_Error(char *error_cause) {
     printf("Error: %s failed to initialize!\n", error_cause);
     return 1;
 }
 
 int Game_Init() {
     //initialize sdl and the other libraries (sdl_image is initialized with sdl_init())
-    if (!SDL_Init(SDL_INIT_VIDEO)) return init_error("SDL");
-    if (!TTF_Init()) return init_error("SDL_ttf");
+    if (!SDL_Init(SDL_INIT_VIDEO)) return Init_Error("SDL");
+    if (!TTF_Init()) return Init_Error("SDL_ttf");
+
+    //get resolution to position window in center of screen
+    const SDL_DisplayMode *dm = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+    int x, y;
+
+    if (dm != NULL) {
+        x = dm->w - DEFAULT_WIDTH;
+        y = dm->h - DEFAULT_HEIGHT;
+    }
+    else {
+        //use arbitrary positioning if display is unknown
+        x = 100;
+        y = 100;
+    }
 
     //initialize window and renderer
     Window = SDL_CreateWindow(TITLE, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_RESIZABLE);
-    if (!Window) return init_error("SDL window");
-    SDL_SetWindowPosition(Window, 0, 0); //window position set to top left corner
+    if (!Window) return Init_Error("SDL window");
+    SDL_SetWindowPosition(Window, x/2, y/2); //center of screen (if display is known)
     SDL_SetWindowMinimumSize(Window, MIN_WIDTH, MIN_HEIGHT); //window size limited
 
     Renderer = SDL_CreateRenderer(Window, NULL);
-    if (!Renderer) return init_error("SDL renderer");
+    if (!Renderer) return Init_Error("SDL renderer");
 
     return 0;
 }
 
-static void set_aligned_position(Alignment alignment, int *x, int *y, int w, int h){
+
+static void Set_Aligned_Position(Alignment alignment, int *x, int *y, int w, int h) {
     //get window size
     int window_width, window_height;
     SDL_GetWindowSize(Window, &window_width, &window_height);
@@ -71,9 +86,9 @@ static void set_aligned_position(Alignment alignment, int *x, int *y, int w, int
     }
 }
 
-SDL_FRect Render_Rect(int w, int h, int x, int y, Alignment alignment, SDL_Color color, bool color_fill) {
+static SDL_FRect Render_Rect(int w, int h, int x, int y, Alignment alignment, SDL_Color color, bool color_fill) {
     //change x and y based on alignment
-    set_aligned_position(alignment, &x, &y, w, h);
+    Set_Aligned_Position(alignment, &x, &y, w, h);
 
     //set up rect with renderer
     SDL_FRect rect = {x, y, w, h};
@@ -91,7 +106,7 @@ SDL_FRect Render_Rect(int w, int h, int x, int y, Alignment alignment, SDL_Color
     return rect;
 }
 
-SDL_FRect Render_Text(char *text, TTF_Font *font, int x, int y, Alignment alignment, SDL_Color color) {
+static SDL_FRect Render_Text(char *text, TTF_Font *font, int x, int y, Alignment alignment, SDL_Color color) {
     //set up text texture
     SDL_Surface *text_surface = TTF_RenderText_Blended(font, text, 0, color);
     SDL_Texture *text_texture = SDL_CreateTextureFromSurface(Renderer, text_surface);
@@ -99,7 +114,7 @@ SDL_FRect Render_Text(char *text, TTF_Font *font, int x, int y, Alignment alignm
     //change x and y based on alignment
     float text_width = text_surface->w;
     float text_height = text_surface->h;
-    set_aligned_position(alignment, &x, &y, text_width, text_height);
+    Set_Aligned_Position(alignment, &x, &y, text_width, text_height);
 
     //render text texture
     SDL_FRect destination_rect = {
@@ -115,9 +130,9 @@ SDL_FRect Render_Text(char *text, TTF_Font *font, int x, int y, Alignment alignm
     return destination_rect;
 }
 
-SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignment, SDL_Color color) {
+static SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignment, SDL_Color color) {
     //change x and y based on alignment
-    set_aligned_position(alignment, &x, &y, w, h);
+    Set_Aligned_Position(alignment, &x, &y, w, h);
 
     //create texture and render it
     SDL_Texture *texture = IMG_LoadTexture(Renderer, image);
@@ -128,55 +143,79 @@ SDL_FRect Render_Image(char *image, int w, int h, int x, int y, Alignment alignm
     return destination_rect;
 }
 
+
 static Grid_Letter** Render_Grid() {
-    Grid_Letter **grid = malloc(Word_Length * Max_Attempts * sizeof(Grid_Letter));
+    //allocate memory for grid
+    Grid_Letter **grid = malloc(Max_Attempts * sizeof(Grid_Letter*));
     if (!grid) return NULL;
+    for (int i=0; i<Max_Attempts; i++) {
+        grid[i] = malloc(Word_Length*sizeof(Grid_Letter));
+        if (!grid[i]) return NULL;
+    }
 
     //window size
     int window_width, window_height;
     SDL_GetWindowSize(Window, &window_width, &window_height);
 
-    //measurements
+    //frame adjustments
     const int WIDTH_MARGIN = 75;
     const int HEIGHT_MARGIN_TOP = 75;
     const int HEIGHT_MARGIN_BOTTOM = 200;
     const int GRID_PADDING = 10;
+
+    //tile size measurements
     const int FRAME_WIDTH = window_width - WIDTH_MARGIN * 2;
     const int FRAME_HEIGHT = window_height - (HEIGHT_MARGIN_TOP + HEIGHT_MARGIN_BOTTOM);
     const int FRAME_X = WIDTH_MARGIN;
     const int FRAME_Y = HEIGHT_MARGIN_TOP;
+    int tile_size = (FRAME_WIDTH - (Word_Length - 1) * GRID_PADDING) / Word_Length;
+    int tile_size_h = (FRAME_HEIGHT - (Max_Attempts - 1) * GRID_PADDING) / Max_Attempts;
+    if (tile_size_h < tile_size) tile_size = tile_size_h;
+    const int GRID_WIDTH = tile_size * Word_Length + (Word_Length - 1) * GRID_PADDING;
+    const int GRID_HEIGHT = tile_size * Max_Attempts + (Max_Attempts - 1) * GRID_PADDING;
+    const int GRID_X = FRAME_X + (FRAME_WIDTH - GRID_WIDTH) / 2;
+    const int GRID_Y = FRAME_Y + (FRAME_HEIGHT - GRID_HEIGHT) / 2;
 
-    //set up frame and children
-    Render_Rect(FRAME_WIDTH, FRAME_HEIGHT, FRAME_X, FRAME_Y, Default, Color.White, true);
+    //set up grid
     for (int i=0; i<Word_Length; i++) {
         for (int j=0; j<Max_Attempts; j++) {
-            //make rectangle child
-            SDL_FRect child = Render_Rect(
-                FRAME_WIDTH/Word_Length-GRID_PADDING,
-                FRAME_HEIGHT/Max_Attempts-GRID_PADDING,
-                FRAME_X+i*(FRAME_WIDTH/Word_Length)+GRID_PADDING/2,
-                FRAME_Y+j*(FRAME_HEIGHT/Max_Attempts)+GRID_PADDING/2,
+            int x = GRID_X + i * (tile_size + GRID_PADDING);
+            int y = GRID_Y + j * (tile_size + GRID_PADDING);
+
+            //make grid square
+            SDL_FRect tile = Render_Rect(
+                tile_size,
+                tile_size,
+                x,
+                y,
                 Default,
                 Color.DarkGray,
                 true
             );
+
             Grid_Letter grid_letter;
-            grid_letter.rect = child;
+            grid_letter.rect = tile;
             grid_letter.color = Color.DarkGray;
+            grid_letter.letter = ' ';
             grid[j][i] = grid_letter;
         }
     }
-
+    
     return grid;
 }
 
 void Render_Game() {
     Grid_Letter **grid = Render_Grid();
 
-    if (!grid) {
+    if (grid == NULL) {
         printf("Error: Failed to allocate memory for grid.\n");
     }
-    else {
-        printf("Success!");
+
+    //blah blah blah
+
+    //free grid
+    for (int i=0; i<Max_Attempts; i++) {
+        free(grid[i]);
     }
+    free(grid);
 }
